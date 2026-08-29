@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,170 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String          @unique @db.VarChar(320)
+  passwordHash          String          @map("password_hash")
+  role                  UserRole
+  companyId             String?         @map("company_id") @db.Uuid
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+  applicationsAsStudent Application[]   @relation("StudentApplications")
+  assignmentsAsAssigner Assignment[]    @relation("AssignerAssignments")
+  assignmentsAsMentor   Assignment[]    @relation("MentorAssignments")
+  studentProfile        StudentProfile?
+  company               Company?        @relation(fields: [companyId], references: [id])
+  notifications         Notification[]
+
+  @@index([companyId])
+  @@map("users")
+}
+
+model StudentProfile {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  studentCode String   @unique @map("student_code") @db.VarChar(20)
+  major       String   @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+model Company {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String        @unique @db.VarChar(255)
+  field        String?       @db.VarChar(100)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  applications Application[]
+  users        User[]
+
+  @@map("companies")
+}
+
+model Period {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String        @unique @db.VarChar(50)
+  startDate    DateTime      @map("start_date") @db.Date
+  endDate      DateTime      @map("end_date") @db.Date
+  status       PeriodStatus  @default(DRAFT)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  applications Application[]
+
+  @@map("periods")
+}
+
+model Application {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId          String               @map("student_id") @db.Uuid
+  periodId           String               @map("period_id") @db.Uuid
+  companyId          String               @map("company_id") @db.Uuid
+  status             ApplicationStatus    @default(PENDING)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  company            Company              @relation(fields: [companyId], references: [id])
+  period             Period               @relation(fields: [periodId], references: [id])
+  student            User                 @relation("StudentApplications", fields: [studentId], references: [id])
+  assignment         Assignment?
+  evaluationCriteria EvaluationCriteria[]
+  evaluation         Evaluation?
+
+  @@unique([studentId, periodId], map: "uq_applications_student_period")
+  @@index([periodId, status])
+  @@map("applications")
+}
+
+model Assignment {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String      @unique @map("application_id") @db.Uuid
+  mentorId      String      @map("mentor_id") @db.Uuid
+  assignedBy    String      @map("assigned_by") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  application   Application @relation(fields: [applicationId], references: [id])
+  assigner      User        @relation("AssignerAssignments", fields: [assignedBy], references: [id])
+  mentor        User        @relation("MentorAssignments", fields: [mentorId], references: [id])
+
+  @@index([mentorId])
+  @@map("assignments")
+}
+
+model EvaluationCriteria {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String      @map("application_id") @db.Uuid
+  name          String      @db.VarChar(255)
+  weight        Decimal     @db.Decimal(5, 2)
+  score         Decimal?    @db.Decimal(4, 2)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  @@index([applicationId])
+  @@map("evaluation_criteria")
+}
+
+model Evaluation {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  applicationId String      @unique @map("application_id") @db.Uuid
+  totalScore    Decimal     @default(0.00) @map("total_score") @db.Decimal(4, 2)
+  finalStatus   FinalStatus @default(IN_PROGRESS) @map("final_status")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  application   Application @relation(fields: [applicationId], references: [id])
+
+  @@map("evaluations")
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @db.VarChar(255)
+  message   String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum UserRole {
+  admin
+  hr
+  mentor
+  student
+
+  @@map("user_role")
+}
+
+enum PeriodStatus {
+  DRAFT
+  OPEN
+  CLOSED
+
+  @@map("period_status")
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("application_status")
+}
+
+enum FinalStatus {
+  IN_PROGRESS
+  PASSED
+  FAILED
+
+  @@map("final_status")
 }
