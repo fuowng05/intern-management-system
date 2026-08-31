@@ -1,25 +1,24 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model User {
-  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                 String          @unique @db.VarChar(320)
-  passwordHash          String          @map("password_hash")
+  id                    String        @id @default(uuid())
+  email                 String        @unique @db.VarChar(320)
+  passwordHash          String        @map("password_hash")
   role                  UserRole
-  companyId             String?         @map("company_id") @db.Uuid
-  createdAt             DateTime        @default(now()) @map("created_at")
-  updatedAt             DateTime        @updatedAt @map("updated_at")
-  applicationsAsStudent Application[]   @relation("StudentApplications")
-  assignmentsAsAssigner Assignment[]    @relation("AssignerAssignments")
-  assignmentsAsMentor   Assignment[]    @relation("MentorAssignments")
+  companyId             String?       @map("company_id")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  applicationsAsStudent Application[] @relation("StudentApplications")
+  assignmentsAsAssigner Assignment[]  @relation("AssignerAssignments")
+  assignmentsAsMentor   Assignment[]  @relation("MentorAssignments")
   studentProfile        StudentProfile?
-  company               Company?        @relation(fields: [companyId], references: [id])
+  company               Company?      @relation(fields: [companyId], references: [id])
   notifications         Notification[]
 
   @@index([companyId])
@@ -27,8 +26,8 @@ model User {
 }
 
 model StudentProfile {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String   @unique @map("user_id") @db.Uuid
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
   studentCode String   @unique @map("student_code") @db.VarChar(20)
   major       String   @db.VarChar(100)
   createdAt   DateTime @default(now()) @map("created_at")
@@ -39,7 +38,7 @@ model StudentProfile {
 }
 
 model Company {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String        @id @default(uuid())
   name         String        @unique @db.VarChar(255)
   field        String?       @db.VarChar(100)
   createdAt    DateTime      @default(now()) @map("created_at")
@@ -51,7 +50,7 @@ model Company {
 }
 
 model Period {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id           String        @id @default(uuid())
   code         String        @unique @db.VarChar(50)
   startDate    DateTime      @map("start_date") @db.Date
   endDate      DateTime      @map("end_date") @db.Date
@@ -64,10 +63,10 @@ model Period {
 }
 
 model Application {
-  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  studentId          String               @map("student_id") @db.Uuid
-  periodId           String               @map("period_id") @db.Uuid
-  companyId          String               @map("company_id") @db.Uuid
+  id                 String               @id @default(uuid())
+  studentId          String               @map("student_id")
+  periodId           String               @map("period_id")
+  companyId          String               @map("company_id")
   status             ApplicationStatus    @default(PENDING)
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
@@ -84,10 +83,10 @@ model Application {
 }
 
 model Assignment {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId String      @unique @map("application_id") @db.Uuid
-  mentorId      String      @map("mentor_id") @db.Uuid
-  assignedBy    String      @map("assigned_by") @db.Uuid
+  id            String      @id @default(uuid())
+  applicationId String      @unique @map("application_id")
+  mentorId      String      @map("mentor_id")
+  assignedBy    String      @map("assigned_by")
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   application   Application @relation(fields: [applicationId], references: [id])
@@ -99,8 +98,8 @@ model Assignment {
 }
 
 model EvaluationCriteria {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId String      @map("application_id") @db.Uuid
+  id            String      @id @default(uuid())
+  applicationId String      @map("application_id")
   name          String      @db.VarChar(255)
   weight        Decimal     @db.Decimal(5, 2)
   score         Decimal?    @db.Decimal(4, 2)
@@ -113,8 +112,8 @@ model EvaluationCriteria {
 }
 
 model Evaluation {
-  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  applicationId String      @unique @map("application_id") @db.Uuid
+  id            String      @id @default(uuid())
+  applicationId String      @unique @map("application_id")
   totalScore    Decimal     @default(0.00) @map("total_score") @db.Decimal(4, 2)
   finalStatus   FinalStatus @default(IN_PROGRESS) @map("final_status")
   createdAt     DateTime    @default(now()) @map("created_at")
@@ -125,8 +124,8 @@ model Evaluation {
 }
 
 model Notification {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
   title     String   @db.VarChar(255)
   message   String   @db.Text
   isRead    Boolean  @default(false) @map("is_read")
@@ -145,30 +144,22 @@ enum UserRole {
   hr
   mentor
   student
-
-  @@map("user_role")
 }
 
 enum PeriodStatus {
   DRAFT
   OPEN
   CLOSED
-
-  @@map("period_status")
 }
 
 enum ApplicationStatus {
   PENDING
   APPROVED
   REJECTED
-
-  @@map("application_status")
 }
 
 enum FinalStatus {
   IN_PROGRESS
   PASSED
   FAILED
-
-  @@map("final_status")
 }

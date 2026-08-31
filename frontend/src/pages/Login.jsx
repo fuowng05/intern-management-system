@@ -1,13 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth.api";
 
 function Login() {
-  const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,18 +21,15 @@ function Login() {
         return;
       }
 
+      // Lưu thông tin đăng nhập
       localStorage.setItem("token", result.data.token);
+      localStorage.setItem("user", JSON.stringify(result.data.user));
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify(result.data.user)
-      );
-
-      navigate("/dashboard");
+      // Tải lại trang để App.jsx tự động mở giao diện Dashboard
+      window.location.reload();
     } catch (error) {
       setError(
-        error.response?.data?.message ||
-          "Login failed"
+        error.response?.data?.message || "Login failed"
       );
     } finally {
       setLoading(false);
@@ -47,19 +40,15 @@ function Login() {
     <div className="login-page">
       <div className="login-card">
         <h1>Internship Management System</h1>
-
         <h2>Login</h2>
 
         <form onSubmit={handleSubmit}>
           <div>
             <label>Email</label>
-
             <input
               type="email"
               value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email"
               required
             />
@@ -67,31 +56,19 @@ function Login() {
 
           <div>
             <label>Password</label>
-
             <input
               type="password"
               value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
               required
             />
           </div>
 
-          {error && (
-            <p className="error">
-              {error}
-            </p>
-          )}
+          {error && <p className="error">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-          >
-            {loading
-              ? "Logging in..."
-              : "Login"}
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>

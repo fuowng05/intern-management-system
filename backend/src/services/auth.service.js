@@ -5,6 +5,9 @@ import prisma from "../config/prisma.js";
 const SALT_ROUNDS = 10;
 
 const register = async ({ email, password, role }) => {
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
   const normalizedEmail = email.trim().toLowerCase();
 
   const existingUser = await prisma.user.findUnique({
@@ -38,8 +41,22 @@ const register = async ({ email, password, role }) => {
   return user;
 };
 
-const login = async ({ email, password }) => {
-  const normalizedEmail = email.trim().toLowerCase();
+const login = async (credentials, optionalPassword) => {
+  // Tự động nhận diện dù controller truyền login({ email, password }) hay login(email, password)
+  let email, password;
+  if (typeof credentials === "object" && credentials !== null) {
+    email = credentials.email;
+    password = credentials.password;
+  } else {
+    email = credentials;
+    password = optionalPassword;
+  }
+
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
 
   const user = await prisma.user.findUnique({
     where: {
@@ -51,14 +68,16 @@ const login = async ({ email, password }) => {
     throw new Error("Invalid email or password");
   }
 
-  const passwordMatched = await bcrypt.compare(
-    password,
-    user.passwordHash
-  );
+  // Tự động tương thích với cả passwordHash lẫn password_hash trong CSDL
+  const storedPassword = user.passwordHash || user.password_hash || user.password;
+  const passwordMatched = await bcrypt.compare(password, storedPassword);
 
   if (!passwordMatched) {
     throw new Error("Invalid email or password");
   }
+
+  // Chuỗi khóa dự phòng tránh crash nếu chưa cấu hình file .env
+  const secretKey = process.env.JWT_SECRET || "fallback_jwt_secret_key_123";
 
   const token = jwt.sign(
     {
@@ -66,7 +85,7 @@ const login = async ({ email, password }) => {
       email: user.email,
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    secretKey,
     {
       expiresIn: process.env.JWT_EXPIRES_IN || "1d",
     }
