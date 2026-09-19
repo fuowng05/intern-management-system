@@ -11,6 +11,4 @@ public class RegisterRequest
     public string? StudentCode { get; set; }
 
     public string? Major { get; set; }
-
-    public string? Phone { get; set; }
 }

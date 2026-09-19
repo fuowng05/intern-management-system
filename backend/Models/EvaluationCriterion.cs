@@ -6,15 +6,24 @@ public class EvaluationCriterion
 
     public Guid EvaluationId { get; set; }
 
+    // Nếu null => tiêu chí do Mentor tự thêm
+    public Guid? SourceItemId { get; set; }
+
     public string Name { get; set; } = string.Empty;
 
     public decimal Weight { get; set; }
 
     public decimal? Score { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsMandatory { get; set; }
 
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public decimal? MinPassScore { get; set; }
+
+    public string? Comment { get; set; }
+
+    public int DisplayOrder { get; set; }
 
     public Evaluation Evaluation { get; set; } = null!;
+
+    public CriteriaTemplateItem? SourceItem { get; set; }
 }

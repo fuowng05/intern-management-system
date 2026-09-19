@@ -34,12 +34,19 @@ namespace InternshipManagement.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("char(36)");
+
                     b.Property<Guid>("PeriodId")
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("char(36)");
@@ -51,11 +58,15 @@ namespace InternshipManagement.Api.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.HasIndex("PeriodId");
+                    b.HasIndex("DecidedBy");
 
-                    b.HasIndex("StudentId");
+                    b.HasIndex("StudentId", "PeriodId")
+                        .IsUnique();
 
-                    b.ToTable("Applications");
+                    b.HasIndex("PeriodId", "CompanyId", "Status")
+                        .HasDatabaseName("IX_Applications_Period_Company_Status");
+
+                    b.ToTable("Applications", (string)null);
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Assignment", b =>
@@ -67,17 +78,14 @@ namespace InternshipManagement.Api.Migrations
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("char(36)");
 
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid>("AssignedBy")
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<Guid>("MentorId")
                         .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -86,9 +94,62 @@ namespace InternshipManagement.Api.Migrations
 
                     b.HasIndex("AssignedBy");
 
-                    b.HasIndex("MentorId");
+                    b.HasIndex("MentorId", "ApplicationId")
+                        .HasDatabaseName("IX_Assignments_Mentor_Application");
 
-                    b.ToTable("Assignments");
+                    b.ToTable("Assignments", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("NewStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("OldStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("EntityType", "EntityId", "CreatedAt")
+                        .HasDatabaseName("IX_AuditLogs_Entity_Time");
+
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Company", b =>
@@ -97,23 +158,148 @@ namespace InternshipManagement.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Field")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("TaxCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TaxCode")
+                        .IsUnique();
+
                     b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.CriteriaTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("AllowWeightEdit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("IssuedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("IssuedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("MaxItems")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(8);
+
+                    b.Property<int>("MinItems")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid>("PeriodId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("DRAFT");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IssuedBy");
+
+                    b.HasIndex("PeriodId", "Code", "Version")
+                        .IsUnique();
+
+                    b.ToTable("CriteriaTemplates", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CriteriaTemplates_MinMaxItems", "`MinItems` <= `MaxItems`");
+
+                            t.HasCheckConstraint("CK_CriteriaTemplates_Status", "`Status` IN ('DRAFT','PUBLISHED','ARCHIVED')");
+                        });
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.CriteriaTemplateItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("DefaultWeight")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsMandatory")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal?>("MinPassScore")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId", "DisplayOrder")
+                        .IsUnique();
+
+                    b.HasIndex("TemplateId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("CriteriaTemplateItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CriteriaTemplateItems_DefaultWeight", "`DefaultWeight` > 0 AND `DefaultWeight` <= 100");
+
+                            t.HasCheckConstraint("CK_CriteriaTemplateItems_MinPassScore", "`MinPassScore` IS NULL OR (`MinPassScore` >= 0 AND `MinPassScore` <= 10)");
+                        });
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Evaluation", b =>
@@ -125,26 +311,94 @@ namespace InternshipManagement.Api.Migrations
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<string>("Classification")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("MentorComment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<Guid>("MentorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("FinalStatus")
+                    b.Property<string>("Result")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ReturnReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("ReviewerId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
+                    b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("DRAFT");
 
-                    b.Property<decimal>("TotalScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal?>("TotalScore")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<decimal>("WeightTotal")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)")
+                        .HasDefaultValue(0m);
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationId")
                         .IsUnique();
 
-                    b.ToTable("Evaluations");
+                    b.HasIndex("MentorId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("Status", "SubmittedAt")
+                        .HasDatabaseName("IX_Evaluations_Status_SubmittedAt");
+
+                    b.ToTable("Evaluations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Evaluations_Result", "`Result` IS NULL OR `Result` IN ('PASSED','FAILED')");
+
+                            t.HasCheckConstraint("CK_Evaluations_SeparationOfDuties", "`ReviewerId` IS NULL OR `ReviewerId` <> `MentorId`");
+
+                            t.HasCheckConstraint("CK_Evaluations_Status", "`Status` IN ('DRAFT','SUBMITTED','RETURNED','PUBLISHED')");
+
+                            t.HasCheckConstraint("CK_Evaluations_TotalScore", "`TotalScore` IS NULL OR (`TotalScore` >= 0 AND `TotalScore` <= 10)");
+
+                            t.HasCheckConstraint("CK_Evaluations_WeightTotal", "`WeightTotal` >= 0 AND `WeightTotal` <= 100");
+                        });
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.EvaluationCriterion", b =>
@@ -153,22 +407,34 @@ namespace InternshipManagement.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<string>("Comment")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EvaluationId")
                         .HasColumnType("char(36)");
 
+                    b.Property<bool>("IsMandatory")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal?>("MinPassScore")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<decimal?>("Score")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<Guid?>("SourceItemId")
+                        .HasColumnType("char(36)");
 
                     b.Property<decimal>("Weight")
                         .HasPrecision(5, 2)
@@ -176,9 +442,69 @@ namespace InternshipManagement.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EvaluationId");
+                    b.HasIndex("SourceItemId");
 
-                    b.ToTable("EvaluationCriteria");
+                    b.HasIndex("EvaluationId", "DisplayOrder")
+                        .IsUnique();
+
+                    b.HasIndex("EvaluationId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("EvaluationCriteria", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EvaluationCriteria_MinPassScore", "`MinPassScore` IS NULL OR (`MinPassScore` >= 0 AND `MinPassScore` <= 10)");
+
+                            t.HasCheckConstraint("CK_EvaluationCriteria_Score", "`Score` IS NULL OR (`Score` >= 0 AND `Score` <= 10)");
+
+                            t.HasCheckConstraint("CK_EvaluationCriteria_Weight", "`Weight` > 0 AND `Weight` <= 100");
+                        });
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.EvaluationPublication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Classification")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<Guid>("EvaluationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("PublishedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<decimal>("TotalScore")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublishedBy");
+
+                    b.HasIndex("EvaluationId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EvaluationPublications_Evaluation_Version");
+
+                    b.ToTable("EvaluationPublications", (string)null);
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.InternshipPeriod", b =>
@@ -189,8 +515,8 @@ namespace InternshipManagement.Api.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -198,12 +524,18 @@ namespace InternshipManagement.Api.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -213,7 +545,10 @@ namespace InternshipManagement.Api.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("InternshipPeriods");
+                    b.ToTable("InternshipPeriods", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_InternshipPeriods_DateRange", "`EndDate` > `StartDate`");
+                        });
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Notification", b =>
@@ -226,15 +561,19 @@ namespace InternshipManagement.Api.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("tinyint(1)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -246,7 +585,134 @@ namespace InternshipManagement.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Permission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Permissions", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("ReplacedById")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReplacedById");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.RolePermission", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("GrantedBy")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("SELF");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("GrantedBy");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RolePermissions_Scope", "`Scope` IN ('SELF','ASSIGNED','COMPANY','ALL')");
+                        });
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.StudentProfile", b =>
@@ -255,28 +721,35 @@ namespace InternshipManagement.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<string>("ClassName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Cohort")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Major")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
 
                     b.Property<string>("StudentCode")
-                        .HasColumnType("longtext");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StudentCode")
+                        .IsUnique();
+
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("StudentProfiles");
+                    b.ToTable("StudentProfiles", (string)null);
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.User", b =>
@@ -293,16 +766,28 @@ namespace InternshipManagement.Api.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
+                        .HasMaxLength(320)
+                        .HasColumnType("varchar(320)");
+
+                    b.Property<int>("FailedLoginCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -314,30 +799,52 @@ namespace InternshipManagement.Api.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Application", b =>
                 {
                     b.HasOne("InternshipManagement.Api.Models.Company", "Company")
-                        .WithMany()
+                        .WithMany("Applications")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("InternshipManagement.Api.Models.InternshipPeriod", "Period")
+                    b.HasOne("InternshipManagement.Api.Models.User", "DecidedByUser")
                         .WithMany()
+                        .HasForeignKey("DecidedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InternshipManagement.Api.Models.InternshipPeriod", "Period")
+                        .WithMany("Applications")
                         .HasForeignKey("PeriodId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("InternshipManagement.Api.Models.StudentProfile", "Student")
+                    b.HasOne("InternshipManagement.Api.Models.User", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Company");
+
+                    b.Navigation("DecidedByUser");
 
                     b.Navigation("Period");
 
@@ -347,9 +854,9 @@ namespace InternshipManagement.Api.Migrations
             modelBuilder.Entity("InternshipManagement.Api.Models.Assignment", b =>
                 {
                     b.HasOne("InternshipManagement.Api.Models.Application", "Application")
-                        .WithOne()
+                        .WithOne("Assignment")
                         .HasForeignKey("InternshipManagement.Api.Models.Assignment", "ApplicationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("InternshipManagement.Api.Models.User", "AssignedByUser")
@@ -371,15 +878,76 @@ namespace InternshipManagement.Api.Migrations
                     b.Navigation("Mentor");
                 });
 
-            modelBuilder.Entity("InternshipManagement.Api.Models.Evaluation", b =>
+            modelBuilder.Entity("InternshipManagement.Api.Models.AuditLog", b =>
                 {
-                    b.HasOne("InternshipManagement.Api.Models.Application", "Application")
-                        .WithOne()
-                        .HasForeignKey("InternshipManagement.Api.Models.Evaluation", "ApplicationId")
+                    b.HasOne("InternshipManagement.Api.Models.User", "ActorUser")
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ActorUser");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.CriteriaTemplate", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.User", "IssuedByUser")
+                        .WithMany()
+                        .HasForeignKey("IssuedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InternshipManagement.Api.Models.InternshipPeriod", "Period")
+                        .WithMany()
+                        .HasForeignKey("PeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("IssuedByUser");
+
+                    b.Navigation("Period");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.CriteriaTemplateItem", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.CriteriaTemplate", "Template")
+                        .WithMany("Items")
+                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Evaluation", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.Application", "Application")
+                        .WithOne("Evaluation")
+                        .HasForeignKey("InternshipManagement.Api.Models.Evaluation", "ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InternshipManagement.Api.Models.User", "Mentor")
+                        .WithMany()
+                        .HasForeignKey("MentorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InternshipManagement.Api.Models.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InternshipManagement.Api.Models.CriteriaTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Application");
+
+                    b.Navigation("Mentor");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.EvaluationCriterion", b =>
@@ -390,7 +958,33 @@ namespace InternshipManagement.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InternshipManagement.Api.Models.CriteriaTemplateItem", "SourceItem")
+                        .WithMany()
+                        .HasForeignKey("SourceItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Evaluation");
+
+                    b.Navigation("SourceItem");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.EvaluationPublication", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.Evaluation", "Evaluation")
+                        .WithMany("Publications")
+                        .HasForeignKey("EvaluationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InternshipManagement.Api.Models.User", "PublishedByUser")
+                        .WithMany()
+                        .HasForeignKey("PublishedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Evaluation");
+
+                    b.Navigation("PublishedByUser");
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Notification", b =>
@@ -404,12 +998,56 @@ namespace InternshipManagement.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("InternshipManagement.Api.Models.RefreshToken", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.RefreshToken", "ReplacedBy")
+                        .WithMany()
+                        .HasForeignKey("ReplacedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InternshipManagement.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReplacedBy");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.RolePermission", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.User", "GrantedByUser")
+                        .WithMany()
+                        .HasForeignKey("GrantedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InternshipManagement.Api.Models.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InternshipManagement.Api.Models.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GrantedByUser");
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("InternshipManagement.Api.Models.StudentProfile", b =>
                 {
                     b.HasOne("InternshipManagement.Api.Models.User", "User")
-                        .WithOne()
+                        .WithOne("StudentProfile")
                         .HasForeignKey("InternshipManagement.Api.Models.StudentProfile", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -420,19 +1058,78 @@ namespace InternshipManagement.Api.Migrations
                     b.HasOne("InternshipManagement.Api.Models.Company", "Company")
                         .WithMany("Users")
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("InternshipManagement.Api.Models.UserRole", b =>
+                {
+                    b.HasOne("InternshipManagement.Api.Models.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InternshipManagement.Api.Models.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Application", b =>
+                {
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Evaluation");
+                });
+
             modelBuilder.Entity("InternshipManagement.Api.Models.Company", b =>
                 {
+                    b.Navigation("Applications");
+
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.CriteriaTemplate", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("InternshipManagement.Api.Models.Evaluation", b =>
                 {
                     b.Navigation("Criteria");
+
+                    b.Navigation("Publications");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.InternshipPeriod", b =>
+                {
+                    b.Navigation("Applications");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("InternshipManagement.Api.Models.User", b =>
+                {
+                    b.Navigation("StudentProfile");
+
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

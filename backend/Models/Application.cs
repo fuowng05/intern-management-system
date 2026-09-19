@@ -10,15 +10,29 @@ public class Application
 
     public Guid CompanyId { get; set; }
 
-    public string Status { get; set; } = string.Empty;
+    public string Status { get; set; } = "PENDING";
+
+    // Người duyệt hồ sơ
+    public Guid? DecidedBy { get; set; }
+
+    public DateTime? DecidedAt { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public StudentProfile Student { get; set; } = null!;
+
+    // Navigation properties
+
+    public User Student { get; set; } = null!;
 
     public InternshipPeriod Period { get; set; } = null!;
 
     public Company Company { get; set; } = null!;
+
+    public User? DecidedByUser { get; set; }
+
+    public Assignment? Assignment { get; set; }
+
+    public Evaluation? Evaluation { get; set; }
 }

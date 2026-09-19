@@ -10,9 +10,7 @@ public class Assignment
 
     public Guid AssignedBy { get; set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime AssignedAt { get; set; } = DateTime.UtcNow;
 
     public Application Application { get; set; } = null!;
 

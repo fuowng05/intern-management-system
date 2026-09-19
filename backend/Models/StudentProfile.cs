@@ -6,13 +6,13 @@ public class StudentProfile
 
     public Guid UserId { get; set; }
 
-    public string FullName { get; set; } = string.Empty;
+    public string StudentCode { get; set; } = string.Empty;
 
-    public string? StudentCode { get; set; }
+    public string? ClassName { get; set; }
 
     public string? Major { get; set; }
 
-    public string? Phone { get; set; }
+    public string? Cohort { get; set; }
 
     public User User { get; set; } = null!;
 }
