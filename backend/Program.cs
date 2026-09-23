@@ -251,5 +251,19 @@ app.UseAuthorization();
 // CONTROLLERS
 // =========================
 app.MapControllers();
+// ============================================================
+// DEMO DATA SEED
+// Chỉ chạy trong Development và khi SeedDemoData = true
+// ============================================================
 
+if (app.Environment.IsDevelopment() &&
+    app.Configuration.GetValue<bool>("SeedDemoData"))
+{
+    using var scope = app.Services.CreateScope();
+
+    var dbContext =
+        scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    await DemoDataSeeder.SeedAsync(dbContext);
+}
 app.Run();
