@@ -12,6 +12,16 @@ using InternshipManagement.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 // =========================
 // DATABASE
 // =========================
@@ -56,6 +66,8 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAssignmentService,
     AssignmentService>();
+
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<
     ICriteriaTemplateService,
@@ -229,7 +241,8 @@ if (app.Environment.IsDevelopment())
 // =========================
 // MIDDLEWARE
 // =========================
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
