@@ -20,86 +20,114 @@ interface MenuItem {
   label: string;
   path: string;
   permission: string;
+  roles: string[];
   icon: React.ElementType;
 }
 
 const menuItems: MenuItem[] = [
+  // =====================================================
+  // ADMIN
+  // =====================================================
   {
     label: "Tổng quan",
     path: "/dashboard",
     permission: "DASHBOARD_VIEW",
+    roles: ["ADMIN"],
     icon: LayoutDashboard,
-  },
-  {
-    label: "Đơn thực tập",
-    path: "/applications",
-    permission: "APPLICATION_VIEW_SELF",
-    icon: FileText,
   },
   {
     label: "Quản lý đơn",
     path: "/admin/applications",
     permission: "APPLICATION_VIEW_ALL",
+    roles: ["ADMIN"],
     icon: ClipboardList,
   },
   {
     label: "Phân công",
     path: "/assignments",
     permission: "ASSIGNMENT_VIEW_ALL",
+    roles: ["ADMIN"],
     icon: UserCheck,
-  },
-  {
-    label: "Đánh giá thực tập",
-    path: "/evaluations",
-    permission: "EVALUATION_SCORE",
-    icon: Star,
-  },
-  {
-    label: "Duyệt đánh giá",
-    path: "/review",
-    permission: "EVALUATION_REVIEW",
-    icon: BadgeCheck,
-  },
-  {
-    label: "Kết quả thực tập",
-    path: "/results",
-    permission: "RESULT_VIEW_SELF",
-    icon: GraduationCap,
   },
   {
     label: "Doanh nghiệp",
     path: "/admin/companies",
     permission: "COMPANY_MANAGE",
+    roles: ["ADMIN"],
     icon: Building2,
   },
   {
     label: "Đợt thực tập",
     path: "/admin/periods",
     permission: "INTERNSHIP_PERIOD_MANAGE",
+    roles: ["ADMIN"],
     icon: CalendarDays,
   },
   {
     label: "Bộ tiêu chí",
     path: "/admin/criteria",
     permission: "CRITERIA_TEMPLATE_MANAGE",
+    roles: ["ADMIN"],
     icon: ListChecks,
   },
   {
     label: "Báo cáo",
     path: "/admin/reports",
     permission: "REPORT_VIEW",
+    roles: ["ADMIN"],
     icon: BarChart3,
   },
   {
     label: "Nhật ký hệ thống",
     path: "/admin/audit-logs",
     permission: "AUDIT_VIEW",
+    roles: ["ADMIN"],
     icon: ScrollText,
+  },
+
+  // =====================================================
+  // STUDENT
+  // =====================================================
+  {
+    label: "Đơn thực tập",
+    path: "/applications",
+    permission: "APPLICATION_VIEW_SELF",
+    roles: ["STUDENT"],
+    icon: FileText,
+  },
+  {
+    label: "Kết quả thực tập",
+    path: "/results",
+    permission: "RESULT_VIEW_SELF",
+    roles: ["STUDENT"],
+    icon: GraduationCap,
+  },
+
+  // =====================================================
+  // MENTOR
+  // =====================================================
+  {
+    label: "Đánh giá thực tập",
+    path: "/evaluations",
+    permission: "EVALUATION_SCORE",
+    roles: ["MENTOR"],
+    icon: Star,
+  },
+
+  // =====================================================
+  // REVIEWER
+  // =====================================================
+  {
+    label: "Duyệt đánh giá",
+    path: "/review",
+    permission: "EVALUATION_REVIEW",
+    roles: ["REVIEWER"],
+    icon: BadgeCheck,
   },
 ];
 
 function Sidebar() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, hasRole } = useAuth();
 
   return (
     <aside className="sidebar">
@@ -118,7 +146,11 @@ function Sidebar() {
 
       <nav className="sidebar-nav">
         {menuItems
-          .filter((item) => hasPermission(item.permission))
+          .filter(
+            (item) =>
+              hasPermission(item.permission) &&
+              item.roles.some((role) => hasRole(role))
+          )
           .map((item) => {
             const Icon = item.icon;
 
