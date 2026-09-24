@@ -493,15 +493,12 @@ Source code:
 Branch ổn định hiện tại:
 
 ```text
-rebuild-from-scratch
+main
 ```
-
-Sau khi hoàn tất kiểm thử và tài liệu, branch này sẽ trở thành phiên bản `main` chính thức của project.
-
 ---
 
 ## Tác giả
 
-**Nhóm 14: Nguyễn Thanh Phượng,Trần Thị Phương Thuỳ, Nghiêm Tùng Dương**
+**Nhóm 14: Nguyễn Thanh Phượng, Trần Thị Phương Thuỳ, Nghiêm Tùng Dương**
 
 Dự án được xây dựng phục vụ mục đích học tập và phát triển hệ thống quản lý thực tập sinh.

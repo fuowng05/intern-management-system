@@ -2,6 +2,10 @@
 **/bin/
 **/obj/
 
+# Node / Vite
+**/node_modules/
+**/dist/
+
 # Visual Studio
 .vs/
 *.user
