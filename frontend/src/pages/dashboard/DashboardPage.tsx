@@ -26,58 +26,61 @@ function DashboardPage() {
   const canViewDashboard =
     hasPermission("DASHBOARD_VIEW");
 
-    if (!canViewDashboard) {
-      if (hasRole("STUDENT")) {
-        return <Navigate to="/applications" replace />;
+    useEffect(() => {
+      if (!canViewDashboard) {
+        setLoading(false);
+        return;
       }
-  
-      if (hasRole("MENTOR")) {
-        return <Navigate to="/evaluations" replace />;
-      }
-  
-      if (hasRole("REVIEWER")) {
-        return <Navigate to="/review" replace />;
-      }
-  
-      return <Navigate to="/login" replace />;
-    }
 
-  useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        const result =
-          await dashboardService.getDashboard();
+      const loadDashboard = async () => {
+        try {
+          const result =
+            await dashboardService.getDashboard();
 
-        setData(result);
-      } catch (err) {
-        if (axios.isAxiosError(err)) {
-          if (!err.response) {
-            setError(
-              "Không thể kết nối đến máy chủ."
-            );
-          } else if (err.response.status === 403) {
-            setError(
-              "Bạn không có quyền xem Dashboard."
-            );
+          setData(result);
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            if (!err.response) {
+              setError(
+                "Không thể kết nối đến máy chủ."
+              );
+            } else if (err.response.status === 403) {
+              setError(
+                "Bạn không có quyền xem Dashboard."
+              );
+            } else {
+              setError(
+                err.response.data?.message ??
+                  "Không thể tải dữ liệu Dashboard."
+              );
+            }
           } else {
             setError(
-              err.response.data?.message ??
-                "Không thể tải dữ liệu Dashboard."
+              "Không thể tải dữ liệu Dashboard."
             );
           }
-        } else {
-          setError(
-            "Không thể tải dữ liệu Dashboard."
-          );
+        } finally {
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    void loadDashboard();
-  }, []);
+      void loadDashboard();
+    }, [canViewDashboard]);
+    if (!canViewDashboard) {
+    if (hasRole("STUDENT")) {
+      return <Navigate to="/applications" replace />;
+    }
 
+    if (hasRole("MENTOR")) {
+      return <Navigate to="/evaluations" replace />;
+    }
+
+    if (hasRole("REVIEWER")) {
+      return <Navigate to="/review" replace />;
+    }
+
+    return <Navigate to="/login" replace />;
+  }
   if (loading) {
     return (
       <div className="dashboard-state">
